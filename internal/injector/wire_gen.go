@@ -29,15 +29,27 @@ func InitializedApp() *config.App {
 	db := config.NewDatabase(configConfig, logger)
 	userRepository := repository.NewUser(logger)
 	validate := config.NewValidator(configConfig)
-	authUseCase := usecase.NewAuthUseCase(db, logger, userRepository, jwt, validate)
+	client := config.NewRedisClient(configConfig)
+	email := util.NewEmailUtil(configConfig)
+	authUseCase := usecase.NewAuthUseCase(db, logger, userRepository, jwt, validate, client, email)
 	authController := controller.NewAuthController(authUseCase, logger)
-	routerConfig := delivery.NewRouter(app, v, authController)
+	walletRepository := repository.NewWallet(logger)
+	transactionRepository := repository.NewTransaction(logger)
+	transactionUseCase := usecase.NewTransactionUseCase(db, logger, walletRepository, transactionRepository, validate, client)
+	transactionController := controller.NewTransactionController(transactionUseCase, logger)
+	routerConfig := delivery.NewRouter(app, v, authController, transactionController)
 	configApp := config.NewApp(routerConfig, configConfig)
 	return configApp
 }
 
 // app.go:
 
-var authSet = wire.NewSet(repository.NewUser, wire.Bind(new(domain.UserRepository), new(*repository.UserRepository)), usecase.NewAuthUseCase, controller.NewAuthController)
+var authSet = wire.NewSet(usecase.NewAuthUseCase, controller.NewAuthController)
+
+var userSet = wire.NewSet(repository.NewUser, wire.Bind(new(domain.UserRepository), new(*repository.UserRepository)))
+
+var walletSet = wire.NewSet(repository.NewWallet, wire.Bind(new(domain.WalletRepository), new(*repository.WalletRepository)))
+
+var transactionSet = wire.NewSet(repository.NewTransaction, wire.Bind(new(domain.TransactionRepository), new(*repository.TransactionRepository)), usecase.NewTransactionUseCase, controller.NewTransactionController)
 
 var middlewareSet = wire.NewSet(middleware.NewAuthMiddleware)

@@ -1,0 +1,11 @@
+CREATE TABLE public.wallets (
+    id BIGSERIAL PRIMARY KEY, 
+    user_id BIGINT NOT NULL, 
+    wallet_number VARCHAR(100) UNIQUE, 
+    wallet_pin VARCHAR(255), 
+    balance BIGINT DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES public.users (id) ON DELETE CASCADE
+);

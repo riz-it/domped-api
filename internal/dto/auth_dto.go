@@ -13,6 +13,11 @@ type RegisterRequest struct {
 	Password string `json:"password" validate:"required"`
 }
 
+type EmailVerificationRequest struct {
+	ReferenceID string `json:"reference_id" validate:"required"`
+	OTP         string `json:"otp" validate:"required"`
+}
+
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
 }
@@ -21,6 +26,10 @@ type RefreshTokenRequest struct {
 type LoginResponse struct {
 	User  CredentialData `json:"user"`
 	Token TokenData      `json:"token"`
+}
+
+type RegisterResponse struct {
+	ReferenceID string `json:"reference_id"`
 }
 
 // Data

@@ -1,7 +1,9 @@
 package util
 
 import (
+	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -12,4 +14,23 @@ func ConvertToSpaced(input string) string {
 	spaced := re.ReplaceAllString(input, `${1} ${2}`)
 	// Convert the first letter to uppercase and the rest to lowercase
 	return strings.ToUpper(spaced[:1]) + strings.ToLower(spaced[1:])
+}
+
+func ExtractIDFromReference(input string) (int64, error) {
+
+	lastDashIndex := strings.LastIndex(input, "-")
+	if lastDashIndex == -1 {
+		return 0, fmt.Errorf("invalid reference ID format: %s", input)
+	}
+
+	// Ambil substring setelah tanda '-' terakhir
+	userIDStr := input[lastDashIndex+1:]
+
+	// Konversi substring ke int64
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return userID, nil
 }

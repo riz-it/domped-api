@@ -12,6 +12,8 @@ type Config struct {
 	Logger   Logger
 	Server   Server
 	Jwt      JWTConfig
+	Redis    Redis
+	SMTP     SMTP
 }
 
 type Server struct {
@@ -42,6 +44,20 @@ type Database struct {
 
 type Logger struct {
 	Level string
+}
+
+type Redis struct {
+	Address string
+	User    string
+	Pass    string
+	DB      string
+}
+
+type SMTP struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
 }
 
 func Get() *Config {
@@ -76,6 +92,18 @@ func Get() *Config {
 			AccessTokenExp:  os.Getenv("JWT_ACCESS_EXP"),
 			RefreshTokenKey: os.Getenv("JWT_REFRESH_KEY"),
 			RefreshTokenExp: os.Getenv("JWT_REFRESH_EXP"),
+		},
+		Redis: Redis{
+			Address: os.Getenv("REDIS_ADDR"),
+			User:    os.Getenv("REDIS_USER"),
+			Pass:    os.Getenv("REDIS_PASS"),
+			DB:      os.Getenv("REDIS_DB"),
+		},
+		SMTP: SMTP{
+			Host:     os.Getenv("SMTP_HOST"),
+			Port:     os.Getenv("SMTP_PORT"),
+			User:     os.Getenv("SMTP_USER"),
+			Password: os.Getenv("SMTP_PASS"),
 		},
 	}
 }

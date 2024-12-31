@@ -1,13 +1,13 @@
--- Active: 1735609545514@@pg-174dd6a0-mrizalf-040e.g.aivencloud.com@27154@defaultdb
+-- Active: 1735301424776@@aws-0-ap-southeast-1.pooler.supabase.com@6543@postgres@public
 CREATE TABLE public.users (
-    id SERIAL NOT NULL,
+    id BIGSERIAL PRIMARY KEY NOT NULL,
     full_name VARCHAR(125),
-    email VARCHAR(125) NOT NULL,
+    phone VARCHAR(16),
+    email VARCHAR(75) NOT NULL,
     password VARCHAR(255) NOT NULL,
     hashed_rt TEXT,
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    email_verified_at TIMESTAMP(3),
-    created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP(3),
-    CONSTRAINT users_pkey PRIMARY KEY (id)
+    is_active BOOLEAN NOT NULL DEFAULT false,
+    email_verified_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

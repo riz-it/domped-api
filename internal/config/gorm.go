@@ -20,6 +20,7 @@ func NewDatabase(conf *Config, log *logrus.Logger) *gorm.DB {
 	maxLifeTimeConnection, _ := strconv.Atoi(conf.Database.MaxLifeTimeConnection)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		SkipDefaultTransaction: true,
 		Logger: logger.New(&logrusWriter{Logger: log}, logger.Config{
 			SlowThreshold:             time.Second * 5,
 			Colorful:                  false,

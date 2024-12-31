@@ -16,10 +16,25 @@ import (
 )
 
 var authSet = wire.NewSet(
-	repository.NewUser,
-	wire.Bind(new(domain.UserRepository), new(*repository.UserRepository)),
 	usecase.NewAuthUseCase,
 	controller.NewAuthController,
+)
+
+var userSet = wire.NewSet(
+	repository.NewUser,
+	wire.Bind(new(domain.UserRepository), new(*repository.UserRepository)),
+)
+
+var walletSet = wire.NewSet(
+	repository.NewWallet,
+	wire.Bind(new(domain.WalletRepository), new(*repository.WalletRepository)),
+)
+
+var transactionSet = wire.NewSet(
+	repository.NewTransaction,
+	wire.Bind(new(domain.TransactionRepository), new(*repository.TransactionRepository)),
+	usecase.NewTransactionUseCase,
+	controller.NewTransactionController,
 )
 
 var middlewareSet = wire.NewSet(
@@ -34,9 +49,14 @@ func InitializedApp() *config.App {
 		config.NewValidator,
 		config.NewFiber,
 		config.NewApp,
+		config.NewRedisClient,
 		delivery.NewRouter,
 		util.NewJWTUtil,
+		util.NewEmailUtil,
 		authSet,
+		userSet,
+		walletSet,
+		transactionSet,
 		middlewareSet,
 	)
 	return nil
