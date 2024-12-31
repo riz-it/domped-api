@@ -33,48 +33,37 @@ func NewAuthUseCase(db *gorm.DB, log *logrus.Logger, userRepository domain.UserR
 
 // Login implements domain.AuthUseCase.
 func (a *AuthUseCase) Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error) {
-	// Create a context with a timeout of 10 seconds
 	c, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	// Validate the input request
 	if validationErrors := util.Validate(a.Validate, req); len(validationErrors) > 0 {
 		return nil, domain.NewError(fiber.StatusBadRequest, "The provided data is invalid", validationErrors)
 	}
 
-	// Initialize a database transaction with the context
 	tx := a.DB.WithContext(c).Begin()
+	defer tx.Rollback()
 	user := new(domain.UserEntity)
-
-	// Check if a user exists with the given email
 	if err := a.UserRepository.FindByEmail(tx, user, req.Email); err != nil {
 		return nil, domain.NewError(fiber.StatusUnauthorized, "Invalid email or password")
 	}
-
-	// Verify the provided password
 	if !util.VerifyPassword(user.Password, req.Password) {
 		return nil, domain.NewError(fiber.StatusUnauthorized, "Invalid email or password")
 	}
 
-	// Generate access and refresh tokens
 	accessToken, refreshToken, err := a.JWT.GenerateToken(user.ID)
 	if err != nil {
 		a.Log.WithError(err).Error("Failed to generate tokens")
 		return nil, domain.NewError(fiber.StatusInternalServerError)
 	}
-
-	// Store the hashed refresh token in the database
 	user.HashedRt = refreshToken
 	if err := a.UserRepository.Update(tx, user); err != nil {
 		a.Log.WithError(err).Warnf("Failed to save user data: %+v", err)
 		return nil, domain.NewError(fiber.StatusInternalServerError)
 	}
-
 	if err := tx.Commit().Error; err != nil {
 		return nil, domain.NewError(fiber.StatusInternalServerError)
 	}
 
-	// Return the login response containing user credentials and tokens
 	return &dto.LoginResponse{
 		User: dto.CredentialData{
 			FullName: user.FullName,
@@ -88,16 +77,142 @@ func (a *AuthUseCase) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 }
 
 // Register implements domain.AuthUseCase.
-func (a *AuthUseCase) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error) {
-	panic("unimplemented")
+func (a *AuthUseCase) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.LoginResponse, error) {
+	c, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	if validationErrors := util.Validate(a.Validate, req); len(validationErrors) > 0 {
+		return nil, domain.NewError(fiber.StatusBadRequest, "The provided data is invalid", validationErrors)
+	}
+
+	tx := a.DB.WithContext(c).Begin()
+	defer tx.Rollback()
+	count, err := a.UserRepository.CountByEmail(tx, req.Email)
+	if err != nil {
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+	if count > 0 {
+		return nil, domain.NewError(fiber.StatusConflict, "Email already in use")
+	}
+
+	password, err := util.HashPassword(req.Password)
+	if err != nil {
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+
+	user := &domain.UserEntity{
+		Password: string(password),
+		FullName: req.FullName,
+		Email:    req.Email,
+		IsActive: true,
+	}
+
+	if err := a.UserRepository.Create(tx, user); err != nil {
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+
+	accessToken, refreshToken, err := a.JWT.GenerateToken(user.ID)
+	if err != nil {
+		a.Log.WithError(err).Error("Failed to generate tokens")
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+	user.HashedRt = refreshToken
+	if err := a.UserRepository.Update(tx, user); err != nil {
+		a.Log.WithError(err).Warnf("Failed to save user data: %+v", err)
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+
+	return &dto.LoginResponse{
+		User: dto.CredentialData{
+			FullName: user.FullName,
+			Email:    user.Email,
+		},
+		Token: dto.TokenData{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		},
+	}, nil
 }
 
 // Logout implements domain.AuthUseCase.
-func (a *AuthUseCase) Logout(ctx context.Context, userID uint) error {
-	panic("unimplemented")
+func (a *AuthUseCase) Logout(ctx context.Context, userID int64) error {
+	c, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	tx := a.DB.WithContext(c).Begin()
+	defer tx.Rollback()
+	user := new(domain.UserEntity)
+	if err := a.UserRepository.FindByID(tx, user, userID); err != nil {
+		return domain.NewError(fiber.StatusNotFound, "User not found")
+	}
+
+	if user.HashedRt == "" {
+		return domain.NewError(fiber.StatusUnauthorized, "User is not authorized")
+	}
+
+	user.HashedRt = ""
+	if err := a.UserRepository.Update(tx, user); err != nil {
+		a.Log.WithError(err).Warnf("Failed to save user data: %+v", err)
+		return fiber.ErrInternalServerError
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return domain.NewError(fiber.StatusInternalServerError)
+	}
+
+	return nil
 }
 
 // Refresh implements domain.AuthUseCase.
 func (a *AuthUseCase) Refresh(ctx context.Context, req *dto.RefreshTokenRequest) (*dto.LoginResponse, error) {
-	panic("unimplemented")
+	c, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	if validationErrors := util.Validate(a.Validate, req); len(validationErrors) > 0 {
+		return nil, domain.NewError(fiber.StatusBadRequest, "The provided data is invalid", validationErrors)
+	}
+
+	userID, err := a.JWT.ValidateRefreshToken(req.RefreshToken)
+	if err != nil {
+		return nil, domain.NewError(fiber.StatusBadRequest, "Invalid refresh token")
+	}
+
+	tx := a.DB.WithContext(c).Begin()
+	defer tx.Rollback()
+	user := new(domain.UserEntity)
+	if err := a.UserRepository.FindByID(tx, user, userID); err != nil {
+		return nil, domain.NewError(fiber.StatusNotFound, "User not found")
+	}
+	if user.HashedRt != req.RefreshToken {
+		return nil, domain.NewError(fiber.StatusUnauthorized, "Invalid refresh token")
+	}
+
+	accessToken, refreshToken, err := a.JWT.GenerateToken(user.ID)
+	if err != nil {
+		a.Log.WithError(err).Error("Failed to generate tokens")
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+	user.HashedRt = refreshToken
+	if err := a.UserRepository.Update(tx, user); err != nil {
+		a.Log.WithError(err).Warnf("Failed to save user data: %+v", err)
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+	if err := tx.Commit().Error; err != nil {
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+
+	return &dto.LoginResponse{
+		User: dto.CredentialData{
+			FullName: user.FullName,
+			Email:    user.Email,
+		},
+		Token: dto.TokenData{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		},
+	}, nil
 }

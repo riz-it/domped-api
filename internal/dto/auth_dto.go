@@ -3,13 +3,14 @@ package dto
 // Request
 type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password"`
+	Password string `json:"password" validate:"required"`
 }
 
 type RegisterRequest struct {
-	FullName string `json:"full_name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	FullName string `json:"full_name" validate:"required"`
+	Phone    string `json:"phone" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
 }
 
 type RefreshTokenRequest struct {
@@ -20,10 +21,6 @@ type RefreshTokenRequest struct {
 type LoginResponse struct {
 	User  CredentialData `json:"user"`
 	Token TokenData      `json:"token"`
-}
-
-type RegisterResponse struct {
-	User CredentialData `json:"user"`
 }
 
 // Data

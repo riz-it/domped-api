@@ -70,7 +70,6 @@ func translateValidationError(err ValidationError) string {
 	}
 
 	if msg, exists := messages[err.Tag]; exists {
-		// Cek apakah parameter tambahan diperlukan
 		if strings.Contains(msg, "%s") && err.Param != nil {
 			return fmt.Sprintf(msg, err.FailedField)
 		}

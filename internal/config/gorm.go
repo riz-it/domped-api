@@ -12,7 +12,7 @@ import (
 )
 
 func NewDatabase(conf *Config, log *logrus.Logger) *gorm.DB {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable Timezone=%s",
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=require Timezone=%s",
 		conf.Database.Host, conf.Database.Port, conf.Database.User, conf.Database.Pass, conf.Database.Name, conf.Database.Tz)
 
 	idleConnection, _ := strconv.Atoi(conf.Database.IdleConnection)

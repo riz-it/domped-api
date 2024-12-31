@@ -1,4 +1,4 @@
--- Active: 1735301424776@@aws-0-ap-southeast-1.pooler.supabase.com@6543@postgres@public
+-- Active: 1735609545514@@pg-174dd6a0-mrizalf-040e.g.aivencloud.com@27154@defaultdb
 CREATE TABLE public.users (
     id SERIAL NOT NULL,
     full_name VARCHAR(125),

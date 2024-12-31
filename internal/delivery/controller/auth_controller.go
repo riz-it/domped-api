@@ -37,3 +37,55 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 		Data:    &response,
 	})
 }
+
+func (c *AuthController) Register(ctx *fiber.Ctx) error {
+
+	request := new(dto.RegisterRequest)
+	if err := ctx.BodyParser(request); err != nil {
+		return fiber.ErrBadRequest
+	}
+
+	response, err := c.AuthUseCase.Register(ctx.UserContext(), request)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(&dto.ApiResponse[*dto.LoginResponse]{
+		Status:  true,
+		Message: "Register successfully",
+		Data:    &response,
+	})
+}
+
+func (c *AuthController) Logout(ctx *fiber.Ctx) error {
+
+	userID := ctx.Locals("userId").(int64)
+	err := c.AuthUseCase.Logout(ctx.UserContext(), userID)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(&dto.ApiResponse[*dto.LoginResponse]{
+		Status:  true,
+		Message: "Logout successfully",
+	})
+}
+
+func (c *AuthController) Refresh(ctx *fiber.Ctx) error {
+
+	request := new(dto.RefreshTokenRequest)
+	if err := ctx.BodyParser(request); err != nil {
+		return fiber.ErrBadRequest
+	}
+
+	response, err := c.AuthUseCase.Refresh(ctx.UserContext(), request)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(&dto.ApiResponse[*dto.LoginResponse]{
+		Status:  true,
+		Message: "Token refreshed successfully",
+		Data:    &response,
+	})
+}
