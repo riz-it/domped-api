@@ -192,6 +192,19 @@ func (t *TransactionUseCase) TransferExecute(ctx context.Context, req *dto.Trans
 		return nil, domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	// Delete the OTP from Redis as it is no longer needed
+	delInquiry := t.Redis.Del(c, req.InquiryKey)
+	if err := delInquiry.Err(); err != nil {
+		t.Log.WithError(err).Warnf("Failed to delete OTP: %+v", err)
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+
+	// Commit the transaction to persist changes
+	if err := tx.Commit().Error; err != nil {
+		t.Log.WithError(err).Warnf("Failed to commit transaction: %+v", err)
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+
 	return &dto.TransferExecuteResponse{
 		InquiryKey: req.InquiryKey,
 		Information: dto.TransferData{
