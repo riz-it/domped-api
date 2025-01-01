@@ -16,24 +16,26 @@ import (
 )
 
 type AuthUseCase struct {
-	DB             *gorm.DB
-	Log            *logrus.Logger
-	UserRepository domain.UserRepository
-	JWT            domain.JWT
-	Validate       *validator.Validate
-	Redis          *redis.Client
-	Email          domain.Email
+	DB               *gorm.DB
+	Log              *logrus.Logger
+	UserRepository   domain.UserRepository
+	JWT              domain.JWT
+	Validate         *validator.Validate
+	Redis            *redis.Client
+	Email            domain.Email
+	WalletRepository domain.WalletRepository
 }
 
-func NewAuthUseCase(db *gorm.DB, log *logrus.Logger, userRepository domain.UserRepository, jwt domain.JWT, validate *validator.Validate, redis *redis.Client, email domain.Email) domain.AuthUseCase {
+func NewAuthUseCase(db *gorm.DB, log *logrus.Logger, userRepository domain.UserRepository, walletRepository domain.WalletRepository, jwt domain.JWT, validate *validator.Validate, redis *redis.Client, email domain.Email) domain.AuthUseCase {
 	return &AuthUseCase{
-		DB:             db,
-		Log:            log,
-		UserRepository: userRepository,
-		JWT:            jwt,
-		Validate:       validate,
-		Redis:          redis,
-		Email:          email,
+		DB:               db,
+		Log:              log,
+		UserRepository:   userRepository,
+		WalletRepository: walletRepository,
+		JWT:              jwt,
+		Validate:         validate,
+		Redis:            redis,
+		Email:            email,
 	}
 }
 
@@ -352,6 +354,28 @@ func (a *AuthUseCase) EmailVerification(ctx context.Context, req *dto.EmailVerif
 	now := time.Now()
 	user.EmailVerifiedAt = &now
 	user.HashedRt = refreshToken
+
+	// Generate wallet number
+	walletNumber, err := util.GenerateWalletNumber(8)
+	if err != nil {
+		a.Log.WithError(err).Error("Failed to generate wallet number")
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+
+	// Check if wallet number already exists
+	count, err := a.WalletRepository.CountByWalletNumber(tx, walletNumber)
+	if err != nil {
+		a.Log.WithError(err).Warnf("Failed to count wallet: %+v", err)
+		return nil, domain.NewError(fiber.StatusInternalServerError)
+	}
+	if count > 0 {
+		walletNumber, _ = util.GenerateWalletNumber(8)
+	}
+
+	user.Wallet = domain.WalletEntity{
+		Balance:      0,
+		WalletNumber: walletNumber,
+	}
 
 	// Update the user record in the repository
 	if err := a.UserRepository.Update(tx, user); err != nil {

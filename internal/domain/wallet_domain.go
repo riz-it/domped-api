@@ -36,4 +36,5 @@ type WalletRepository interface {
 	// Custom functions
 	FindByUserID(db *gorm.DB, user *WalletEntity, userID int64) error
 	FindByWalletNumber(db *gorm.DB, wallet *WalletEntity, walletNumber string) error
+	CountByWalletNumber(db *gorm.DB, walletNumber string) (count int64, err error)
 }

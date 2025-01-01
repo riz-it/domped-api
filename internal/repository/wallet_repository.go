@@ -24,3 +24,8 @@ func (u *WalletRepository) FindByUserID(db *gorm.DB, wallet *domain.WalletEntity
 func (u *WalletRepository) FindByWalletNumber(db *gorm.DB, wallet *domain.WalletEntity, walletNumber string) error {
 	return db.Model(&domain.WalletEntity{}).Where("wallet_number = ?", walletNumber).First(&wallet).Error
 }
+
+func (u *WalletRepository) CountByWalletNumber(db *gorm.DB, walletNumber string) (count int64, err error) {
+	err = db.Model(&domain.WalletEntity{}).Where("wallet_number = ?", walletNumber).Count(&count).Error
+	return count, err
+}

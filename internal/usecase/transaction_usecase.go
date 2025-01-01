@@ -153,7 +153,7 @@ func (t *TransactionUseCase) TransferExecute(ctx context.Context, req *dto.Trans
 
 	// Transaction
 	debitTransaction := domain.TransactionEntity{
-		WalletID:        wallet.ID,
+		WalletID:        dofWallet.ID,
 		SofNumber:       wallet.WalletNumber,
 		DofNumber:       dofWallet.WalletNumber,
 		TransactionType: "D",
@@ -167,7 +167,7 @@ func (t *TransactionUseCase) TransferExecute(ctx context.Context, req *dto.Trans
 	}
 
 	creditTransaction := domain.TransactionEntity{
-		WalletID:        dofWallet.ID,
+		WalletID:        wallet.ID,
 		SofNumber:       wallet.WalletNumber,
 		DofNumber:       dofWallet.WalletNumber,
 		TransactionType: "C",

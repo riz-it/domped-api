@@ -3,6 +3,7 @@ package util
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"math/big"
 
 	"github.com/google/uuid"
@@ -59,4 +60,23 @@ func randomInt(max int) (int, error) {
 		return 0, err
 	}
 	return int(nBig.Int64()), nil
+}
+
+func GenerateWalletNumber(length int) (string, error) {
+	const digits = "0123456789"
+
+	if length <= 0 {
+		return "", fmt.Errorf("length must be greater than 0")
+	}
+
+	walletNumber := make([]byte, length)
+	for i := 0; i < length; i++ {
+		index, err := rand.Int(rand.Reader, big.NewInt(int64(len(digits))))
+		if err != nil {
+			return "", fmt.Errorf("failed to generate random number: %w", err)
+		}
+		walletNumber[i] = digits[index.Int64()]
+	}
+
+	return string(walletNumber), nil
 }
