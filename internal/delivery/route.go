@@ -30,8 +30,8 @@ func NewRouter(r *fiber.App, auth fiber.Handler, authController *controller.Auth
 	r.Post("/auth/verify", authController.EmailVerification)
 
 	/// Transaction
-	r.Post("/transaction/inquiry", auth, transactionController.Inquiry)
-	r.Post("/transaction/execute", auth, transactionController.Execute)
+	r.Post("/transaction/transfer/inquiry", auth, transactionController.Inquiry)
+	r.Post("/transaction/transfer/execute", auth, transactionController.Execute)
 
 	// Mengembalikan RouterConfig
 	return &RouterConfig{
