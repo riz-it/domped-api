@@ -19,6 +19,7 @@ type WalletEntity struct {
 	// Relation
 	Transaction []TransactionEntity `gorm:"foreignKey:WalletID;reference:ID"`
 	User        *UserEntity         `gorm:"foreignKey:UserID;reference:ID"`
+	PinRecovery []PinRecoveryEntity `gorm:"foreignKey:WalletID;reference:ID"`
 }
 
 func (WalletEntity) TableName() string {

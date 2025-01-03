@@ -15,6 +15,9 @@ type PinRecoveryEntity struct {
 	Status    string    `gorm:"column:status"`
 	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt time.Time `gorm:"column:updated_at;autoCreateTime;autoUpdateTime"`
+
+	// Relation
+	Wallet WalletEntity `gorm:"foreignKey:WalletID;reference:ID"`
 }
 
 func (PinRecoveryEntity) TableName() string {
