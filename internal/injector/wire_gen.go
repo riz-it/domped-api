@@ -37,7 +37,10 @@ func InitializedApp() *config.App {
 	transactionRepository := repository.NewTransaction(logger)
 	transactionUseCase := usecase.NewTransactionUseCase(db, logger, walletRepository, transactionRepository, validate, client)
 	transactionController := controller.NewTransactionController(transactionUseCase, logger)
-	routerConfig := delivery.NewRouter(app, v, authController, transactionController)
+	pinRecoveryRepository := repository.NewPinRecovery(logger)
+	pinRecoveryUseCase := usecase.NewPinRecoveryUsecase(db, logger, walletRepository, pinRecoveryRepository, validate)
+	pinRecoveryController := controller.NewPinRecoveryController(pinRecoveryUseCase, logger)
+	routerConfig := delivery.NewRouter(app, v, authController, transactionController, pinRecoveryController)
 	configApp := config.NewApp(routerConfig, configConfig)
 	return configApp
 }
@@ -49,6 +52,8 @@ var authSet = wire.NewSet(usecase.NewAuthUseCase, controller.NewAuthController)
 var userSet = wire.NewSet(repository.NewUser, wire.Bind(new(domain.UserRepository), new(*repository.UserRepository)))
 
 var walletSet = wire.NewSet(repository.NewWallet, wire.Bind(new(domain.WalletRepository), new(*repository.WalletRepository)))
+
+var pinRecoverySet = wire.NewSet(repository.NewPinRecovery, wire.Bind(new(domain.PinRecoveryRepository), new(*repository.PinRecoveryRepository)), usecase.NewPinRecoveryUsecase, controller.NewPinRecoveryController)
 
 var transactionSet = wire.NewSet(repository.NewTransaction, wire.Bind(new(domain.TransactionRepository), new(*repository.TransactionRepository)), usecase.NewTransactionUseCase, controller.NewTransactionController)
 
