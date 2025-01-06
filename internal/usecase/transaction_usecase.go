@@ -57,6 +57,16 @@ func (t *TransactionUseCase) TransferInquiry(ctx context.Context, req *dto.Trans
 		return nil, domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	// Check if destination wallet is same as source wallet
+	if req.AccountNumber == wallet.WalletNumber {
+		return nil, domain.NewError(fiber.StatusBadRequest, "Invalid destination wallet")
+	}
+
+	// Check if pin wallet not setup yet
+	if wallet.PinRecovery == nil {
+		return nil, domain.NewError(fiber.StatusBadRequest, "Please set your pin wallet")
+	}
+
 	// Retrieve destination wallet based on account number
 	dofWallet := new(domain.WalletEntity)
 	if err := t.WalletRepository.FindByWalletNumber(t.DB.WithContext(c), dofWallet, req.AccountNumber); err != nil {
