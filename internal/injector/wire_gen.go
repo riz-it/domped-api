@@ -35,12 +35,15 @@ func InitializedApp() *config.App {
 	authUseCase := usecase.NewAuthUseCase(db, logger, userRepository, walletRepository, jwt, validate, client, email)
 	authController := controller.NewAuthController(authUseCase, logger)
 	transactionRepository := repository.NewTransaction(logger)
-	transactionUseCase := usecase.NewTransactionUseCase(db, logger, walletRepository, transactionRepository, validate, client)
+	notificationRepository := repository.NewNotification(logger)
+	transactionUseCase := usecase.NewTransactionUseCase(db, logger, walletRepository, transactionRepository, notificationRepository, validate, client)
 	transactionController := controller.NewTransactionController(transactionUseCase, logger)
 	pinRecoveryRepository := repository.NewPinRecovery(logger)
-	pinRecoveryUseCase := usecase.NewPinRecoveryUsecase(db, logger, walletRepository, pinRecoveryRepository, validate)
+	pinRecoveryUseCase := usecase.NewPinRecoveryUseCase(db, logger, walletRepository, pinRecoveryRepository, validate)
 	pinRecoveryController := controller.NewPinRecoveryController(pinRecoveryUseCase, logger)
-	routerConfig := delivery.NewRouter(app, v, authController, transactionController, pinRecoveryController)
+	notificationUseCase := usecase.NewNotificationUseCase(db, logger, notificationRepository, validate)
+	notificationController := controller.NewNotificationController(notificationUseCase, logger)
+	routerConfig := delivery.NewRouter(app, v, authController, transactionController, pinRecoveryController, notificationController)
 	configApp := config.NewApp(routerConfig, configConfig)
 	return configApp
 }
@@ -53,7 +56,9 @@ var userSet = wire.NewSet(repository.NewUser, wire.Bind(new(domain.UserRepositor
 
 var walletSet = wire.NewSet(repository.NewWallet, wire.Bind(new(domain.WalletRepository), new(*repository.WalletRepository)))
 
-var pinRecoverySet = wire.NewSet(repository.NewPinRecovery, wire.Bind(new(domain.PinRecoveryRepository), new(*repository.PinRecoveryRepository)), usecase.NewPinRecoveryUsecase, controller.NewPinRecoveryController)
+var pinRecoverySet = wire.NewSet(repository.NewPinRecovery, wire.Bind(new(domain.PinRecoveryRepository), new(*repository.PinRecoveryRepository)), usecase.NewPinRecoveryUseCase, controller.NewPinRecoveryController)
+
+var notificationSet = wire.NewSet(repository.NewNotification, wire.Bind(new(domain.NotificationRepository), new(*repository.NotificationRepository)), usecase.NewNotificationUseCase, controller.NewNotificationController)
 
 var transactionSet = wire.NewSet(repository.NewTransaction, wire.Bind(new(domain.TransactionRepository), new(*repository.TransactionRepository)), usecase.NewTransactionUseCase, controller.NewTransactionController)
 

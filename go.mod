@@ -3,6 +3,7 @@ module riz.it/domped
 go 1.22.4
 
 require (
+	github.com/dustin/go-humanize v1.0.1
 	github.com/go-playground/validator/v10 v10.23.0
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/golang-jwt/jwt v3.2.2+incompatible

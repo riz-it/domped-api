@@ -7,7 +7,8 @@ type TransferInquiryRequest struct {
 }
 
 type TransferExecuteRequest struct {
-	InquiryKey string `json:"inquiry_key"`
+	InquiryKey string `json:"inquiry_key" validate:"required"`
+	PinCode    string `json:"pin_code" validate:"required"`
 }
 
 // Response

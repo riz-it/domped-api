@@ -33,8 +33,15 @@ var walletSet = wire.NewSet(
 var pinRecoverySet = wire.NewSet(
 	repository.NewPinRecovery,
 	wire.Bind(new(domain.PinRecoveryRepository), new(*repository.PinRecoveryRepository)),
-	usecase.NewPinRecoveryUsecase,
+	usecase.NewPinRecoveryUseCase,
 	controller.NewPinRecoveryController,
+)
+
+var notificationSet = wire.NewSet(
+	repository.NewNotification,
+	wire.Bind(new(domain.NotificationRepository), new(*repository.NotificationRepository)),
+	usecase.NewNotificationUseCase,
+	controller.NewNotificationController,
 )
 
 var transactionSet = wire.NewSet(
@@ -63,6 +70,7 @@ func InitializedApp() *config.App {
 		authSet,
 		userSet,
 		walletSet,
+		notificationSet,
 		transactionSet,
 		pinRecoverySet,
 		middlewareSet,

@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	humanize "github.com/dustin/go-humanize"
 )
 
 func ConvertToSpaced(input string) string {
@@ -33,4 +35,10 @@ func ExtractIDFromReference(input string) (int64, error) {
 	}
 
 	return userID, nil
+}
+
+func CurrencyFormat(amount float64) string {
+	humanizeValue := humanize.CommafWithDigits(amount, 0)
+	stringValue := strings.Replace(humanizeValue, ",", ".", -1)
+	return "Rp " + stringValue
 }

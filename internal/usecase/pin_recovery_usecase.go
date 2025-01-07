@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -13,7 +14,7 @@ import (
 	"riz.it/domped/internal/util"
 )
 
-type PinRecoveryUsecase struct {
+type PinRecoveryUseCase struct {
 	DB                    *gorm.DB
 	Log                   *logrus.Logger
 	WalletRepository      domain.WalletRepository
@@ -21,8 +22,8 @@ type PinRecoveryUsecase struct {
 	Validate              *validator.Validate
 }
 
-func NewPinRecoveryUsecase(db *gorm.DB, log *logrus.Logger, walletRepository domain.WalletRepository, pinRecoveryRepository domain.PinRecoveryRepository, validate *validator.Validate) domain.PinRecoveryUseCase {
-	return &PinRecoveryUsecase{
+func NewPinRecoveryUseCase(db *gorm.DB, log *logrus.Logger, walletRepository domain.WalletRepository, pinRecoveryRepository domain.PinRecoveryRepository, validate *validator.Validate) domain.PinRecoveryUseCase {
+	return &PinRecoveryUseCase{
 		DB:                    db,
 		Log:                   log,
 		WalletRepository:      walletRepository,
@@ -32,7 +33,7 @@ func NewPinRecoveryUsecase(db *gorm.DB, log *logrus.Logger, walletRepository dom
 }
 
 // SetupWalletPIN implements domain.PinRecoveryUseCase.
-func (p *PinRecoveryUsecase) SetupWalletPIN(ctx context.Context, req *dto.SetupWalletPINRequest) error {
+func (p *PinRecoveryUseCase) SetupWalletPIN(ctx context.Context, req *dto.SetupWalletPINRequest) error {
 	// Set a timeout for the registration process
 	c, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
@@ -54,6 +55,10 @@ func (p *PinRecoveryUsecase) SetupWalletPIN(ctx context.Context, req *dto.SetupW
 	wallet := new(domain.WalletEntity)
 	err := p.WalletRepository.FindByID(tx, wallet, req.WalletID)
 	if err != nil {
+		// Cek apakah error adalah "not found"
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.NewError(fiber.StatusNotFound, "Wallet does not exist")
+		}
 		p.Log.WithError(err).Warnf("Failed to find wallet: %+v", err)
 		return domain.NewError(fiber.StatusInternalServerError)
 	}

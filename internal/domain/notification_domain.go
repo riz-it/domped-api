@@ -39,5 +39,5 @@ type NotificationRepository interface {
 }
 
 type NotificationUseCase interface {
-	FindByUserID(ctx context.Context, userID int64) (*dto.NotificationData, error)
+	FindByUserID(ctx context.Context, userID int64) (*[]dto.NotificationData, error)
 }

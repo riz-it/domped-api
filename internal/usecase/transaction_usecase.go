@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -17,22 +18,24 @@ import (
 )
 
 type TransactionUseCase struct {
-	DB                    *gorm.DB
-	Log                   *logrus.Logger
-	WalletRepository      domain.WalletRepository
-	TransactionRepository domain.TransactionRepository
-	Validate              *validator.Validate
-	Redis                 *redis.Client
+	DB                     *gorm.DB
+	Log                    *logrus.Logger
+	WalletRepository       domain.WalletRepository
+	TransactionRepository  domain.TransactionRepository
+	NotificationRepository domain.NotificationRepository
+	Validate               *validator.Validate
+	Redis                  *redis.Client
 }
 
-func NewTransactionUseCase(db *gorm.DB, log *logrus.Logger, walletRepository domain.WalletRepository, transactionRepository domain.TransactionRepository, validate *validator.Validate, redis *redis.Client) domain.TransactionUseCase {
+func NewTransactionUseCase(db *gorm.DB, log *logrus.Logger, walletRepository domain.WalletRepository, transactionRepository domain.TransactionRepository, notificationRepository domain.NotificationRepository, validate *validator.Validate, redis *redis.Client) domain.TransactionUseCase {
 	return &TransactionUseCase{
-		DB:                    db,
-		Log:                   log,
-		WalletRepository:      walletRepository,
-		TransactionRepository: transactionRepository,
-		Validate:              validate,
-		Redis:                 redis,
+		DB:                     db,
+		Log:                    log,
+		WalletRepository:       walletRepository,
+		TransactionRepository:  transactionRepository,
+		NotificationRepository: notificationRepository,
+		Validate:               validate,
+		Redis:                  redis,
 	}
 }
 
@@ -63,7 +66,7 @@ func (t *TransactionUseCase) TransferInquiry(ctx context.Context, req *dto.Trans
 	}
 
 	// Check if pin wallet not setup yet
-	if wallet.PinRecovery == nil {
+	if wallet.WalletPin == "" {
 		return nil, domain.NewError(fiber.StatusBadRequest, "Please set your pin wallet")
 	}
 
@@ -159,6 +162,12 @@ func (t *TransactionUseCase) TransferExecute(ctx context.Context, req *dto.Trans
 		return nil, domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	// Check if pin code is valid
+	if !util.VerifyPassword(wallet.WalletPin, req.PinCode) {
+		// Return an error if the password is invalid
+		return nil, domain.NewError(fiber.StatusBadRequest, "Invalid pin code")
+	}
+
 	now := time.Now()
 
 	// Transaction
@@ -215,6 +224,8 @@ func (t *TransactionUseCase) TransferExecute(ctx context.Context, req *dto.Trans
 		return nil, domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	t.notificationAfterTransfer(c, *wallet, *dofWallet, inquiryData.Amount)
+
 	return &dto.TransferExecuteResponse{
 		InquiryKey: req.InquiryKey,
 		Information: dto.TransferData{
@@ -225,5 +236,45 @@ func (t *TransactionUseCase) TransferExecute(ctx context.Context, req *dto.Trans
 			Status:        "success",
 		},
 	}, nil
+
+}
+func (t *TransactionUseCase) notificationAfterTransfer(c context.Context, sofWallet domain.WalletEntity, dofWallet domain.WalletEntity, amount int64) {
+	tx := t.DB.WithContext(c).Begin()
+
+	formattedAmount := util.CurrencyFormat(float64(amount))
+
+	notificationSender := domain.NotificationEntity{
+		UserID: sofWallet.UserID,
+		Title:  "Transfer Berhasil",
+		Body:   fmt.Sprintf("Transfer senilai %s berhasil dilakukan.", formattedAmount),
+		IsRead: false,
+		Status: 1,
+	}
+
+	notificationReceiver := domain.NotificationEntity{
+		UserID: dofWallet.UserID,
+		Title:  "Dana Diterima",
+		Body:   fmt.Sprintf("Dana senilai %s telah diterima.", formattedAmount),
+		IsRead: false,
+		Status: 1,
+	}
+
+	if err := t.NotificationRepository.Create(tx, &notificationSender); err != nil {
+		t.Log.WithError(err).Error("Failed to create sender notification")
+		tx.Rollback()
+		return
+	}
+
+	if err := t.NotificationRepository.Create(tx, &notificationReceiver); err != nil {
+		t.Log.WithError(err).Error("Failed to create receiver notification")
+		tx.Rollback()
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		t.Log.WithError(err).Error("Failed to commit transaction")
+		tx.Rollback()
+		return
+	}
 
 }
