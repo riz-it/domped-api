@@ -14,6 +14,7 @@ type Config struct {
 	Jwt      JWTConfig
 	Redis    Redis
 	SMTP     SMTP
+	Midtrans Midtrans
 }
 
 type Server struct {
@@ -60,6 +61,11 @@ type SMTP struct {
 	Password string
 }
 
+type Midtrans struct {
+	Key    string
+	IsProd bool
+}
+
 func Get() *Config {
 	err := godotenv.Load()
 	if err != nil {
@@ -104,6 +110,10 @@ func Get() *Config {
 			Port:     os.Getenv("SMTP_PORT"),
 			User:     os.Getenv("SMTP_USER"),
 			Password: os.Getenv("SMTP_PASS"),
+		},
+		Midtrans: Midtrans{
+			Key:    os.Getenv("MIDTRANS_KEY"),
+			IsProd: os.Getenv("MIDTRANS_ENV") == "production",
 		},
 	}
 }

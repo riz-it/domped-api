@@ -20,7 +20,8 @@ type UserEntity struct {
 	UpdatedAt       time.Time  `gorm:"column:updated_at;autoCreateTime;autoUpdateTime"`
 
 	// Relation
-	Wallet WalletEntity `gorm:"foreignKey:UserID;reference:ID"`
+	Wallet WalletEntity  `gorm:"foreignKey:UserID;reference:ID"`
+	TopUp  []TopUpEntity `gorm:"foreignKey:UserID;reference:ID"`
 }
 
 func (UserEntity) TableName() string {
