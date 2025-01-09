@@ -43,7 +43,11 @@ func InitializedApp() *config.App {
 	pinRecoveryController := controller.NewPinRecoveryController(pinRecoveryUseCase, logger)
 	notificationUseCase := usecase.NewNotificationUseCase(db, logger, notificationRepository, validate)
 	notificationController := controller.NewNotificationController(notificationUseCase, logger)
-	routerConfig := delivery.NewRouter(app, v, authController, transactionController, pinRecoveryController, notificationController)
+	midtrans := util.NewMidtransUtil(configConfig)
+	topUpRepository := repository.NewTopUp(logger)
+	topUpUseCase := usecase.NewTopUpUseCase(db, logger, notificationRepository, midtrans, topUpRepository, walletRepository, validate)
+	topUpController := controller.NewTopUpController(topUpUseCase, logger, midtrans)
+	routerConfig := delivery.NewRouter(app, v, authController, transactionController, pinRecoveryController, notificationController, topUpController)
 	configApp := config.NewApp(routerConfig, configConfig)
 	return configApp
 }
@@ -61,5 +65,7 @@ var pinRecoverySet = wire.NewSet(repository.NewPinRecovery, wire.Bind(new(domain
 var notificationSet = wire.NewSet(repository.NewNotification, wire.Bind(new(domain.NotificationRepository), new(*repository.NotificationRepository)), usecase.NewNotificationUseCase, controller.NewNotificationController)
 
 var transactionSet = wire.NewSet(repository.NewTransaction, wire.Bind(new(domain.TransactionRepository), new(*repository.TransactionRepository)), usecase.NewTransactionUseCase, controller.NewTransactionController)
+
+var topUpSet = wire.NewSet(repository.NewTopUp, wire.Bind(new(domain.TopUpRepository), new(*repository.TopUpRepository)), usecase.NewTopUpUseCase, controller.NewTopUpController)
 
 var middlewareSet = wire.NewSet(middleware.NewAuthMiddleware)

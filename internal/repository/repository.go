@@ -22,6 +22,10 @@ func (r *Repository[T]) FindByID(db *gorm.DB, entity *T, id int64) error {
 	return db.First(entity, id).Error
 }
 
+func (r *Repository[T]) FindByUUID(db *gorm.DB, entity *T, id string) error {
+	return db.First(entity, id).Error
+}
+
 func (r *Repository[T]) FindAll(db *gorm.DB, entity *[]T) error {
 	return db.Find(entity).Error
 }

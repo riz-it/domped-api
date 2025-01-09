@@ -13,7 +13,7 @@ type RouterConfig struct {
 	App *fiber.App
 }
 
-func NewRouter(r *fiber.App, auth fiber.Handler, authController *controller.AuthController, transactionController *controller.TransactionController, pinRecoveryController *controller.PinRecoveryController, notificationController *controller.NotificationController) *RouterConfig {
+func NewRouter(r *fiber.App, auth fiber.Handler, authController *controller.AuthController, transactionController *controller.TransactionController, pinRecoveryController *controller.PinRecoveryController, notificationController *controller.NotificationController, topUpController *controller.TopUpController) *RouterConfig {
 	// Logger configure
 	logConfig := configureLogger("./logs", "access_log.json")
 	r.Use(logger.New(logConfig))
@@ -38,6 +38,10 @@ func NewRouter(r *fiber.App, auth fiber.Handler, authController *controller.Auth
 	/// Transaction
 	r.Post("/transaction/transfer/inquiry", auth, transactionController.Inquiry)
 	r.Post("/transaction/transfer/execute", auth, transactionController.Execute)
+
+	/// TopUp
+	r.Post("/topup/initialize", auth, topUpController.Initialize)
+	r.Post("/topup/callback", auth, topUpController.Verify)
 
 	// Mengembalikan RouterConfig
 	return &RouterConfig{

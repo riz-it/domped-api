@@ -30,6 +30,7 @@ type TopUpRepository interface {
 	Create(db *gorm.DB, topup *TopUpEntity) error
 	FindAll(db *gorm.DB, topups *[]TopUpEntity) error
 	FindByID(db *gorm.DB, topup *TopUpEntity, id int64) error
+	FindByUUID(db *gorm.DB, topup *TopUpEntity, id string) error
 	Update(db *gorm.DB, topup *TopUpEntity) error
 	Delete(db *gorm.DB, topup *TopUpEntity) error
 

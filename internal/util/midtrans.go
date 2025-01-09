@@ -14,10 +14,9 @@ import (
 type MidtransUtil struct {
 	Client         *snap.Client
 	MidtransConfig *config.Midtrans
-	TopUpUseCase   domain.TopUpUseCase
 }
 
-func NewMidtransUtil(cnf *config.Config, topUpUseCase domain.TopUpUseCase) domain.Midtrans {
+func NewMidtransUtil(cnf *config.Config) domain.Midtrans {
 	var client snap.Client
 	env := midtrans.Sandbox
 
@@ -30,7 +29,6 @@ func NewMidtransUtil(cnf *config.Config, topUpUseCase domain.TopUpUseCase) domai
 	return &MidtransUtil{
 		Client:         &client,
 		MidtransConfig: &cnf.Midtrans,
-		TopUpUseCase:   topUpUseCase,
 	}
 }
 
@@ -55,7 +53,7 @@ func (m *MidtransUtil) GenerateSnapURL(ctx context.Context, t *domain.TopUpEntit
 }
 
 // VerifyPayment implements domain.Midtrans.
-func (m *MidtransUtil) VerifyPayment(ctx context.Context, data map[string]interface{}) error {
+func (m *MidtransUtil) VerifyPayment(ctx context.Context, data map[string]interface{}) (bool, error) {
 	var client coreapi.Client
 	env := midtrans.Sandbox
 
@@ -67,12 +65,12 @@ func (m *MidtransUtil) VerifyPayment(ctx context.Context, data map[string]interf
 
 	orderId, exists := data["order_id"].(string)
 	if !exists {
-		return domain.NewError(fiber.StatusBadRequest, "Invalid payload")
+		return false, domain.NewError(fiber.StatusBadRequest, "Invalid payload")
 	}
 
 	transactionStatusResp, e := client.CheckTransaction(orderId)
 	if e != nil {
-		return e
+		return false, e
 	} else {
 		if transactionStatusResp != nil {
 			// 5. Do set transaction status based on response from check transaction status
@@ -82,11 +80,11 @@ func (m *MidtransUtil) VerifyPayment(ctx context.Context, data map[string]interf
 					// e.g: 'Payment status challenged. Please take action on your Merchant Administration Portal
 				} else if transactionStatusResp.FraudStatus == "accept" {
 					// TODO set transaction status on your database to 'success'
-					_ = m.TopUpUseCase.TopUpConfirmed(ctx, orderId)
+					return true, nil
 				}
 			} else if transactionStatusResp.TransactionStatus == "settlement" {
 				// TODO set transaction status on your databaase to 'success'
-				_ = m.TopUpUseCase.TopUpConfirmed(ctx, orderId)
+				return true, nil
 			} else if transactionStatusResp.TransactionStatus == "deny" {
 				// TODO you can ignore 'deny', because most of the time it allows payment retries
 				// and later can become success
@@ -97,5 +95,5 @@ func (m *MidtransUtil) VerifyPayment(ctx context.Context, data map[string]interf
 			}
 		}
 	}
-	return nil
+	return false, nil
 }

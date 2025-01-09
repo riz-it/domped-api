@@ -51,6 +51,13 @@ var transactionSet = wire.NewSet(
 	controller.NewTransactionController,
 )
 
+var topUpSet = wire.NewSet(
+	repository.NewTopUp,
+	wire.Bind(new(domain.TopUpRepository), new(*repository.TopUpRepository)),
+	usecase.NewTopUpUseCase,
+	controller.NewTopUpController,
+)
+
 var middlewareSet = wire.NewSet(
 	middleware.NewAuthMiddleware,
 )
@@ -66,6 +73,7 @@ func InitializedApp() *config.App {
 		config.NewRedisClient,
 		delivery.NewRouter,
 		util.NewJWTUtil,
+		util.NewMidtransUtil,
 		util.NewEmailUtil,
 		authSet,
 		userSet,
@@ -73,6 +81,7 @@ func InitializedApp() *config.App {
 		notificationSet,
 		transactionSet,
 		pinRecoverySet,
+		topUpSet,
 		middlewareSet,
 	)
 	return nil
