@@ -47,11 +47,17 @@ func (t *TopUpUseCase) InitializeTopUp(ctx context.Context, req *dto.TopUpReques
 		return nil, domain.NewError(fiber.StatusBadRequest, "Invalid data provided", validationErrors)
 	}
 
+	tx := t.DB.WithContext(ctx)
+
 	topup := &domain.TopUpEntity{
-		ID:     util.GenerateUUID(),
 		UserID: userID,
 		Amount: req.Amount,
 		Status: 0,
+	}
+
+	if err := t.TopUpRepository.Create(tx, topup); err != nil {
+		t.Log.WithError(err).Error("Failed to create top-up")
+		return nil, domain.NewError(fiber.StatusInternalServerError)
 	}
 
 	err := t.MidtransUtil.GenerateSnapURL(ctx, topup)
