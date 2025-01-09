@@ -3,7 +3,6 @@ package util
 import (
 	"context"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/midtrans/midtrans-go"
 	"github.com/midtrans/midtrans-go/coreapi"
 	"github.com/midtrans/midtrans-go/snap"
@@ -12,23 +11,20 @@ import (
 )
 
 type MidtransUtil struct {
-	Client         *snap.Client
-	MidtransConfig *config.Midtrans
+	Config      *config.Midtrans
+	Environment midtrans.EnvironmentType
 }
 
 func NewMidtransUtil(cnf *config.Config) domain.Midtrans {
-	var client snap.Client
 	env := midtrans.Sandbox
 
 	if cnf.Midtrans.IsProd {
 		env = midtrans.Production
 	}
 
-	client.New(cnf.Midtrans.Key, env)
-
 	return &MidtransUtil{
-		Client:         &client,
-		MidtransConfig: &cnf.Midtrans,
+		Environment: env,
+		Config:      &cnf.Midtrans,
 	}
 }
 
@@ -41,8 +37,11 @@ func (m *MidtransUtil) GenerateSnapURL(ctx context.Context, t *domain.TopUpEntit
 		},
 	}
 
+	var client *snap.Client
+	client.New(m.Config.Key, m.Environment)
+
 	// 3. Request create Snap transaction to Midtrans
-	snapResp, err := m.Client.CreateTransaction(req)
+	snapResp, err := client.CreateTransaction(req)
 
 	if err != nil {
 		return err
@@ -53,22 +52,11 @@ func (m *MidtransUtil) GenerateSnapURL(ctx context.Context, t *domain.TopUpEntit
 }
 
 // VerifyPayment implements domain.Midtrans.
-func (m *MidtransUtil) VerifyPayment(ctx context.Context, data map[string]interface{}) (bool, error) {
-	var client coreapi.Client
-	env := midtrans.Sandbox
+func (m *MidtransUtil) VerifyPayment(ctx context.Context, orderID string) (bool, error) {
+	var client *coreapi.Client
+	client.New(m.Config.Key, m.Environment)
 
-	if m.MidtransConfig.IsProd {
-		env = midtrans.Production
-	}
-
-	client.New(m.MidtransConfig.Key, env)
-
-	orderId, exists := data["order_id"].(string)
-	if !exists {
-		return false, domain.NewError(fiber.StatusBadRequest, "Invalid payload")
-	}
-
-	transactionStatusResp, e := client.CheckTransaction(orderId)
+	transactionStatusResp, e := client.CheckTransaction(orderID)
 	if e != nil {
 		return false, e
 	} else {

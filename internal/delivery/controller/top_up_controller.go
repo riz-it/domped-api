@@ -62,7 +62,7 @@ func (t *TopUpController) Verify(ctx *fiber.Ctx) error {
 	}
 
 	// Call the Refresh use case to refresh the tokens
-	_, err := t.MidtransUtil.VerifyPayment(ctx.Context(), payload)
+	_, err := t.MidtransUtil.VerifyPayment(ctx.Context(), orderId)
 	if err != nil {
 		// Return the error from the use case
 		return err

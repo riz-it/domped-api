@@ -22,16 +22,19 @@ type TopUpUseCase struct {
 	MidtransUtil           domain.Midtrans
 	TopUpRepository        domain.TopUpRepository
 	WalletRepository       domain.WalletRepository
+	TransactionRepository  domain.TransactionRepository
 	Validate               *validator.Validate
 }
 
-func NewTopUpUseCase(db *gorm.DB, log *logrus.Logger, notificationRepository domain.NotificationRepository, midtransUtil domain.Midtrans, topUpRepository domain.TopUpRepository, walletRepository domain.WalletRepository, validate *validator.Validate) domain.TopUpUseCase {
+func NewTopUpUseCase(db *gorm.DB, log *logrus.Logger, notificationRepository domain.NotificationRepository, midtransUtil domain.Midtrans, topUpRepository domain.TopUpRepository, walletRepository domain.WalletRepository, transactionRepository domain.TransactionRepository, validate *validator.Validate) domain.TopUpUseCase {
 	return &TopUpUseCase{
 		Log:                    log,
+		DB:                     db,
 		NotificationRepository: notificationRepository,
 		MidtransUtil:           midtransUtil,
 		TopUpRepository:        topUpRepository,
 		WalletRepository:       walletRepository,
+		TransactionRepository:  transactionRepository,
 		Validate:               validate,
 	}
 }
@@ -47,22 +50,21 @@ func (t *TopUpUseCase) InitializeTopUp(ctx context.Context, req *dto.TopUpReques
 		return nil, domain.NewError(fiber.StatusBadRequest, "Invalid data provided", validationErrors)
 	}
 
-	tx := t.DB.WithContext(ctx)
-
 	topup := &domain.TopUpEntity{
+		ID:     util.GenerateUUID(),
 		UserID: userID,
 		Amount: req.Amount,
 		Status: 0,
 	}
+
+	tx := t.DB.WithContext(ctx)
 
 	if err := t.TopUpRepository.Create(tx, topup); err != nil {
 		t.Log.WithError(err).Error("Failed to create top-up")
 		return nil, domain.NewError(fiber.StatusInternalServerError)
 	}
 
-	err := t.MidtransUtil.GenerateSnapURL(ctx, topup)
-
-	if err != nil {
+	if err := t.MidtransUtil.GenerateSnapURL(ctx, topup); err != nil {
 		return nil, domain.NewError(fiber.StatusInternalServerError)
 	}
 
@@ -98,9 +100,28 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	topup.Status = 1
+	err = t.TopUpRepository.Update(tx, topup)
+	if err != nil {
+		return domain.NewError(fiber.StatusInternalServerError)
+	}
+
 	wallet.Balance += topup.Amount
 	err = t.WalletRepository.Update(tx, wallet)
 	if err != nil {
+		return domain.NewError(fiber.StatusInternalServerError)
+	}
+
+	transaction := &domain.TransactionEntity{
+		WalletID:        wallet.ID,
+		SofNumber:       "00",
+		DofNumber:       wallet.WalletNumber,
+		Amount:          topup.Amount,
+		TransactionType: "D",
+	}
+
+	if err = t.TransactionRepository.Create(tx, transaction); err != nil {
+		t.Log.WithError(err).Error("Failed to create transaction")
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 

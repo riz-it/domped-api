@@ -45,7 +45,7 @@ func InitializedApp() *config.App {
 	notificationController := controller.NewNotificationController(notificationUseCase, logger)
 	midtrans := util.NewMidtransUtil(configConfig)
 	topUpRepository := repository.NewTopUp(logger)
-	topUpUseCase := usecase.NewTopUpUseCase(db, logger, notificationRepository, midtrans, topUpRepository, walletRepository, validate)
+	topUpUseCase := usecase.NewTopUpUseCase(db, logger, notificationRepository, midtrans, topUpRepository, walletRepository, transactionRepository, validate)
 	topUpController := controller.NewTopUpController(topUpUseCase, logger, midtrans)
 	routerConfig := delivery.NewRouter(app, v, authController, transactionController, pinRecoveryController, notificationController, topUpController)
 	configApp := config.NewApp(routerConfig, configConfig)
