@@ -5,8 +5,8 @@ import (
 	"log"
 	"strconv"
 
-	"riz.it/domped/internal/config"
-	"riz.it/domped/internal/injector"
+	"riz.it/domped/app/config"
+	"riz.it/domped/app/injector"
 )
 
 func main() {

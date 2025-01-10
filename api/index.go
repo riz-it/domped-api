@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
-	"riz.it/domped/internal/injector"
+	"riz.it/domped/app/injector"
 )
 
 // Handler is the main entry point of the application. Think of it like the main() method
