@@ -75,7 +75,7 @@ func (t *TopUpUseCase) InitializeTopUp(ctx context.Context, req *dto.TopUpReques
 
 // TopUpConfirmed implements domain.TopUpUseCase.
 func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
-	ctx, cancel := context.WithTimeout(c, 10*time.Second)
+	ctx, cancel := context.WithTimeout(c, 30*time.Second)
 	defer cancel()
 
 	tx := t.DB.WithContext(ctx)
