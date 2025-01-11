@@ -38,7 +38,7 @@ func NewRouter(r *fiber.App, auth fiber.Handler, authController *controller.Auth
 
 	/// TopUp
 	r.Post("/topup/initialize", auth, topUpController.Initialize)
-	r.Post("/topup/callback", auth, topUpController.Verify)
+	r.Post("/topup/callback", topUpController.Verify)
 
 	// Mengembalikan RouterConfig
 	return &RouterConfig{
