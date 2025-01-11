@@ -2,8 +2,6 @@ package config
 
 import (
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -66,10 +64,10 @@ type Midtrans struct {
 }
 
 func Get() *Config {
-	err := godotenv.Load()
-	if err != nil {
-		// log.Fatal("error load configuration: ", err.Error())
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	// log.Fatal("error load configuration: ", err.Error())
+	// }
 
 	return &Config{
 		Server: Server{
