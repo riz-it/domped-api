@@ -2,6 +2,8 @@ package config
 
 import (
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -64,6 +66,13 @@ type Midtrans struct {
 }
 
 func Get() *Config {
+	if os.Getenv("ENVIRONTMENT") == "" || os.Getenv("ENVIRONTMENT") == "development" {
+		err := godotenv.Load()
+		if err != nil {
+			// Optional: log the error for debugging purposes
+			// fmt.Println("Error loading .env file:", err.Error())
+		}
+	}
 	// err := godotenv.Load()
 	// if err != nil {
 	// 	// log.Fatal("error load configuration: ", err.Error())
