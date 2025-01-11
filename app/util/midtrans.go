@@ -37,7 +37,7 @@ func (m *MidtransUtil) GenerateSnapURL(ctx context.Context, t *domain.TopUpEntit
 		},
 	}
 
-	var client *snap.Client
+	var client snap.Client
 	client.New(m.Config.Key, m.Environment)
 
 	// 3. Request create Snap transaction to Midtrans
@@ -53,7 +53,7 @@ func (m *MidtransUtil) GenerateSnapURL(ctx context.Context, t *domain.TopUpEntit
 
 // VerifyPayment implements domain.Midtrans.
 func (m *MidtransUtil) VerifyPayment(ctx context.Context, orderID string) (bool, error) {
-	var client *coreapi.Client
+	var client coreapi.Client
 	client.New(m.Config.Key, m.Environment)
 
 	transactionStatusResp, e := client.CheckTransaction(orderID)
