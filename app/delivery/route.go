@@ -32,7 +32,7 @@ func NewRouter(r *fiber.App, auth fiber.Handler, authController *controller.Auth
 	/// Pin Recovery
 	r.Post("/wallet/pin/recovery", auth, pinRecoveryController.SetupPin)
 
-	/// Pin Recovery
+	/// Notification
 	r.Get("/notifications", auth, notificationController.GetUserNotifications)
 
 	/// Transaction
@@ -49,26 +49,37 @@ func NewRouter(r *fiber.App, auth fiber.Handler, authController *controller.Auth
 	}
 }
 
-// ConfigureLogger output file
+// ConfigureLogger configures the logger based on environment
 func configureLogger(logDir, logFile string) logger.Config {
-	logPath := logDir + "/" + logFile
-
-	if _, err := os.Stat(logDir); os.IsNotExist(err) {
-		err := os.MkdirAll(logDir, 0755)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	file, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		panic(err)
-	}
+	environment := os.Getenv("Environment") // Get the environment variable
 
 	logFormat := `{"time": "${time}", "status": "${status}", "latency": "${latency}", "ip": "${ip}", "method": "${method}", "path": "${path}", "error": "${error}"}` + "\n"
 
+	if environment == "development" || environment == "" {
+		// Development environment: Write logs to file
+		logPath := logDir + "/" + logFile
+
+		if _, err := os.Stat(logDir); os.IsNotExist(err) {
+			err := os.MkdirAll(logDir, 0755)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		file, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			panic(err)
+		}
+
+		return logger.Config{
+			Format: logFormat,
+			Output: file,
+		}
+	}
+
+	// Default: Use stdout for other environments
 	return logger.Config{
 		Format: logFormat,
-		Output: file,
+		Output: os.Stdout,
 	}
 }
