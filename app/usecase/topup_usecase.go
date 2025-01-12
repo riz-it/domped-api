@@ -125,7 +125,7 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 
-	t.notificationAfterTopUp(c, *wallet, topup.Amount)
+	t.notificationAfterTopUp(tx, *wallet, topup.Amount)
 
 	if err := tx.Commit().Error; err != nil {
 		t.Log.WithError(err).Warnf("Failed to commit topup transaction: %+v", err)
@@ -135,8 +135,7 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 	return nil
 }
 
-func (t *TopUpUseCase) notificationAfterTopUp(c context.Context, wallet domain.WalletEntity, amount int64) {
-	tx := t.DB.WithContext(c).Begin()
+func (t *TopUpUseCase) notificationAfterTopUp(tx *gorm.DB, wallet domain.WalletEntity, amount int64) {
 
 	formattedAmount := util.CurrencyFormat(float64(amount))
 
