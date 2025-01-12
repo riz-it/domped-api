@@ -53,9 +53,7 @@ func (t *TopUpController) Verify(ctx *fiber.Ctx) error {
 	// Extract user ID from the context
 	var payload map[string]interface{}
 	// Parse the refresh token request from the request body
-	fmt.Println(&payload)
 	if err := ctx.BodyParser(&payload); err != nil {
-		fmt.Printf("Payload parsing error: %v\n", err)
 		// Return a bad request error if parsing fails
 		return fiber.ErrBadRequest
 	}
@@ -64,6 +62,8 @@ func (t *TopUpController) Verify(ctx *fiber.Ctx) error {
 	if !exists {
 		return fiber.ErrBadRequest
 	}
+
+	fmt.Println(&orderId)
 
 	// Call the Refresh use case to refresh the tokens
 	_, err := t.MidtransUtil.VerifyPayment(ctx.Context(), orderId)
