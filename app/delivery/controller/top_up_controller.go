@@ -68,15 +68,17 @@ func (t *TopUpController) Verify(ctx *fiber.Ctx) error {
 	fmt.Println("itu")
 
 	// Call the Refresh use case to refresh the tokens
-	_, err := t.MidtransUtil.VerifyPayment(ctx.Context(), orderId)
+	success, err := t.MidtransUtil.VerifyPayment(ctx.Context(), orderId)
 	if err != nil {
 		// Return the error from the use case
 		return err
 	}
 
-	if err = t.TopUpUseCase.TopUpConfirmed(ctx.Context(), orderId); err != nil {
-		// Return the error from the use case
-		return err
+	if success {
+		if err = t.TopUpUseCase.TopUpConfirmed(ctx.Context(), orderId); err != nil {
+			// Return the error from the use case
+			return err
+		}
 	}
 
 	// Return the refreshed token response as a JSON object
