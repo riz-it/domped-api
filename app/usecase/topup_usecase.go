@@ -78,40 +78,56 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 	ctx, cancel := context.WithTimeout(c, 10*time.Second)
 	defer cancel()
 
+	t.Log.Info("Starting TopUpConfirmed process")
+	t.Log.WithField("topup_id", id).Info("Fetching top-up details")
+
 	tx := t.DB.WithContext(ctx)
 
+	// Find top-up by UUID
 	topup := new(domain.TopUpEntity)
 	err := t.TopUpRepository.FindByUUID(tx, topup, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			t.Log.WithField("topup_id", id).Warn("Top-up not found")
 			return domain.NewError(fiber.StatusNotFound, "Top-up not found")
 		}
-
+		t.Log.WithError(err).Error("Failed to fetch top-up details")
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	t.Log.WithField("user_id", topup.UserID).Info("Fetching wallet details")
+	// Find wallet by user ID
 	wallet := new(domain.WalletEntity)
 	err = t.WalletRepository.FindByUserID(tx, wallet, topup.UserID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			t.Log.WithField("user_id", topup.UserID).Warn("Wallet not found")
 			return domain.NewError(fiber.StatusNotFound, "Wallet not found")
 		}
-
+		t.Log.WithError(err).Error("Failed to fetch wallet details")
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	// Update top-up status
+	t.Log.WithField("topup_id", id).Info("Updating top-up status")
 	topup.Status = 1
 	err = t.TopUpRepository.Update(tx, topup)
 	if err != nil {
+		t.Log.WithError(err).Error("Failed to update top-up status")
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	// Update wallet balance
+	t.Log.WithField("user_id", wallet.UserID).Info("Updating wallet balance")
 	wallet.Balance += topup.Amount
 	err = t.WalletRepository.Update(tx, wallet)
 	if err != nil {
+		t.Log.WithError(err).Error("Failed to update wallet balance")
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	// Create transaction record
+	t.Log.Info("Creating transaction record")
 	transaction := &domain.TransactionEntity{
 		WalletID:        wallet.ID,
 		SofNumber:       "00",
@@ -119,19 +135,23 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 		Amount:          topup.Amount,
 		TransactionType: "D",
 	}
-
 	if err = t.TransactionRepository.Create(tx, transaction); err != nil {
 		t.Log.WithError(err).Error("Failed to create transaction")
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	// Send notification
+	t.Log.Info("Sending notification after top-up")
 	t.notificationAfterTopUp(c, *wallet, topup.Amount)
 
+	// Commit transaction
+	t.Log.Info("Committing transaction")
 	if err := tx.Commit().Error; err != nil {
-		t.Log.WithError(err).Warnf("Failed to commit topup transaction: %+v", err)
+		t.Log.WithError(err).Error("Failed to commit top-up transaction")
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	t.Log.Info("TopUpConfirmed process completed successfully")
 	return nil
 }
 
