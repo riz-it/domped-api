@@ -91,7 +91,7 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 	}
 
 	wallet := new(domain.WalletEntity)
-	err = t.WalletRepository.FindByID(tx, wallet, topup.UserID)
+	err = t.WalletRepository.FindByUserID(tx, wallet, topup.UserID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.NewError(fiber.StatusNotFound, "Wallet not found")
