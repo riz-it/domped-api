@@ -81,7 +81,7 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 	t.Log.Info("Starting TopUpConfirmed process")
 	t.Log.WithField("topup_id", id).Info("Fetching top-up details")
 
-	tx := t.DB.WithContext(ctx)
+	tx := t.DB.WithContext(ctx).Begin()
 
 	// Find top-up by UUID
 	topup := new(domain.TopUpEntity)

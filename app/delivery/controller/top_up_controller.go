@@ -61,12 +61,12 @@ func (t *TopUpController) Verify(ctx *fiber.Ctx) error {
 	}
 
 	// Extract order_id from the payload
-	orderId, _ := payload["order_id"].(string)
-	// if !exists {
-	// 	// Log missing order_id field in the request
-	// 	fmt.Println("Error: order_id not found in payload")
-	// 	return fiber.ErrBadRequest
-	// }
+	orderId, exists := payload["order_id"].(string)
+	if !exists {
+		// Log missing order_id field in the request
+		fmt.Println("Error: order_id not found in payload")
+		return fiber.ErrBadRequest
+	}
 
 	// Log the order_id received for debugging
 	fmt.Printf("Received order_id: %s\n", orderId)
