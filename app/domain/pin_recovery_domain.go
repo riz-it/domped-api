@@ -33,5 +33,5 @@ type PinRecoveryRepository interface {
 }
 
 type PinRecoveryUseCase interface {
-	SetupWalletPIN(ctx context.Context, req *dto.SetupWalletPINRequest) error
+	SetupWalletPIN(ctx context.Context, req *dto.SetupWalletPINRequest, userID int64) error
 }

@@ -28,8 +28,9 @@ func (p *PinRecoveryController) SetupPin(ctx *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
+	userID := ctx.Locals("userId").(int64)
 	// Call the Refresh use case to refresh the tokens
-	err := p.PinRecoveryUseCase.SetupWalletPIN(ctx.UserContext(), request)
+	err := p.PinRecoveryUseCase.SetupWalletPIN(ctx.UserContext(), request, userID)
 	if err != nil {
 		// Return the error from the use case
 		return err

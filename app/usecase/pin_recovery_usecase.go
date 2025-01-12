@@ -33,7 +33,7 @@ func NewPinRecoveryUseCase(db *gorm.DB, log *logrus.Logger, walletRepository dom
 }
 
 // SetupWalletPIN implements domain.PinRecoveryUseCase.
-func (p *PinRecoveryUseCase) SetupWalletPIN(ctx context.Context, req *dto.SetupWalletPINRequest) error {
+func (p *PinRecoveryUseCase) SetupWalletPIN(ctx context.Context, req *dto.SetupWalletPINRequest, userID int64) error {
 	// Set a timeout for the registration process
 	c, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
@@ -53,7 +53,7 @@ func (p *PinRecoveryUseCase) SetupWalletPIN(ctx context.Context, req *dto.SetupW
 
 	// Check if the wallet is exist
 	wallet := new(domain.WalletEntity)
-	err := p.WalletRepository.FindByID(tx, wallet, req.WalletID)
+	err := p.WalletRepository.FindByUserID(tx, wallet, userID)
 	if err != nil {
 		// Cek apakah error adalah "not found"
 		if errors.Is(err, gorm.ErrRecordNotFound) {
