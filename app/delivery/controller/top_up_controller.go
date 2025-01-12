@@ -63,7 +63,9 @@ func (t *TopUpController) Verify(ctx *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
+	fmt.Println("ini order id")
 	fmt.Println(&orderId)
+	fmt.Println("itu")
 
 	// Call the Refresh use case to refresh the tokens
 	_, err := t.MidtransUtil.VerifyPayment(ctx.Context(), orderId)
