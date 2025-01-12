@@ -54,11 +54,11 @@ func (t *TopUpController) Verify(ctx *fiber.Ctx) error {
 	var payload map[string]interface{}
 
 	// Parse the refresh token request from the request body
-	// if err := ctx.BodyParser(&payload); err != nil {
-	// 	// Log error when parsing the body fails
-	// 	fmt.Printf("Error parsing request body: %v\n", err)
-	// 	return fiber.ErrBadRequest
-	// }
+	if err := ctx.BodyParser(&payload); err != nil {
+		// Log error when parsing the body fails
+		fmt.Printf("Error parsing request body: %v\n", err)
+		return fiber.ErrBadRequest
+	}
 
 	// Extract order_id from the payload
 	orderId, _ := payload["order_id"].(string)
