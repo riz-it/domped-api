@@ -55,6 +55,7 @@ func (t *TopUpController) Verify(ctx *fiber.Ctx) error {
 	// Parse the refresh token request from the request body
 	fmt.Println(&payload)
 	if err := ctx.BodyParser(&payload); err != nil {
+		fmt.Printf("Payload parsing error: %v\n", err)
 		// Return a bad request error if parsing fails
 		return fiber.ErrBadRequest
 	}
