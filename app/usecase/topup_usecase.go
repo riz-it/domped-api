@@ -128,7 +128,7 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 	t.notificationAfterTopUp(c, *wallet, topup.Amount)
 
 	if err := tx.Commit().Error; err != nil {
-		t.Log.WithError(err).Warnf("Failed to commit transaction: %+v", err)
+		t.Log.WithError(err).Warnf("Failed to commit topup transaction: %+v", err)
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 
@@ -155,7 +155,7 @@ func (t *TopUpUseCase) notificationAfterTopUp(c context.Context, wallet domain.W
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		t.Log.WithError(err).Error("Failed to commit transaction")
+		t.Log.WithError(err).Error("Failed to commit notification transaction")
 		tx.Rollback()
 		return
 	}
