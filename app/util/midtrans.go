@@ -79,7 +79,6 @@ func (m *MidtransUtil) VerifyPayment(ctx context.Context, orderID string) (bool,
 			} else if transactionStatusResp.TransactionStatus == "cancel" || transactionStatusResp.TransactionStatus == "expire" {
 				// TODO set transaction status on your databaase to 'failure'
 			} else if transactionStatusResp.TransactionStatus == "pending" {
-				return true, nil
 				// TODO set transaction status on your databaase to 'pending' / waiting payment
 			}
 		}
