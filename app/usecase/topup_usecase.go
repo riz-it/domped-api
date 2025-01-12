@@ -108,6 +108,14 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	// Log current values for debugging
+	t.Log.WithFields(logrus.Fields{
+		"topup_id":        topup.ID,
+		"wallet_id":       wallet.ID,
+		"current_balance": wallet.Balance,
+		"topup_amount":    topup.Amount,
+	}).Info("Retrieved top-up and wallet data")
+
 	// Update top-up status
 	t.Log.WithField("topup_id", id).Info("Updating top-up status")
 	topup.Status = 1
@@ -126,6 +134,12 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 
+	// Log updated wallet balance
+	t.Log.WithFields(logrus.Fields{
+		"wallet_id":   wallet.ID,
+		"new_balance": wallet.Balance,
+	}).Info("Wallet balance updated successfully")
+
 	// Create transaction record
 	t.Log.Info("Creating transaction record")
 	transaction := &domain.TransactionEntity{
@@ -143,6 +157,13 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 	// Send notification
 	t.Log.Info("Sending notification after top-up")
 	t.notificationAfterTopUp(c, *wallet, topup.Amount)
+
+	// Log before commit
+	t.Log.WithFields(logrus.Fields{
+		"topup_id":  topup.ID,
+		"wallet_id": wallet.ID,
+		"amount":    topup.Amount,
+	}).Info("Ready to commit transaction")
 
 	// Commit transaction
 	t.Log.Info("Committing transaction")
