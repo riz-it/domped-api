@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -125,7 +124,7 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 		return domain.NewError(fiber.StatusInternalServerError)
 	}
 
-	t.notificationAfterTopUp(tx, *wallet, topup.Amount)
+	// t.notificationAfterTopUp(tx, *wallet, topup.Amount)
 
 	if err := tx.Commit().Error; err != nil {
 		t.Log.WithError(err).Warnf("Failed to commit topup transaction: %+v", err)
@@ -135,28 +134,28 @@ func (t *TopUpUseCase) TopUpConfirmed(c context.Context, id string) error {
 	return nil
 }
 
-func (t *TopUpUseCase) notificationAfterTopUp(tx *gorm.DB, wallet domain.WalletEntity, amount int64) {
+// func (t *TopUpUseCase) notificationAfterTopUp(tx *gorm.DB, wallet domain.WalletEntity, amount int64) {
 
-	formattedAmount := util.CurrencyFormat(float64(amount))
+// 	formattedAmount := util.CurrencyFormat(float64(amount))
 
-	notification := domain.NotificationEntity{
-		UserID: wallet.UserID,
-		Title:  "TopUp Berhasil",
-		Body:   fmt.Sprintf("TopUp senilai %s berhasil dilakukan.", formattedAmount),
-		IsRead: false,
-		Status: 1,
-	}
+// 	notification := domain.NotificationEntity{
+// 		UserID: wallet.UserID,
+// 		Title:  "TopUp Berhasil",
+// 		Body:   fmt.Sprintf("TopUp senilai %s berhasil dilakukan.", formattedAmount),
+// 		IsRead: false,
+// 		Status: 1,
+// 	}
 
-	if err := t.NotificationRepository.Create(tx, &notification); err != nil {
-		t.Log.WithError(err).Error("Failed to create sender notification")
-		tx.Rollback()
-		return
-	}
+// 	if err := t.NotificationRepository.Create(tx, &notification); err != nil {
+// 		t.Log.WithError(err).Error("Failed to create sender notification")
+// 		tx.Rollback()
+// 		return
+// 	}
 
-	if err := tx.Commit().Error; err != nil {
-		t.Log.WithError(err).Error("Failed to commit notification transaction")
-		tx.Rollback()
-		return
-	}
+// 	if err := tx.Commit().Error; err != nil {
+// 		t.Log.WithError(err).Error("Failed to commit notification transaction")
+// 		tx.Rollback()
+// 		return
+// 	}
 
-}
+// }
