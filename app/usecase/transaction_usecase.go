@@ -220,7 +220,7 @@ func (t *TransactionUseCase) TransferExecute(ctx context.Context, req *dto.Trans
 
 	// Commit the transaction to persist changes
 	if err := tx.Commit().Error; err != nil {
-		t.Log.WithError(err).Warnf("Failed to commit transaction: %+v", err)
+		t.Log.WithError(err).Warnf("Failed to commit topup transaction: %+v", err)
 		return nil, domain.NewError(fiber.StatusInternalServerError)
 	}
 
@@ -272,7 +272,7 @@ func (t *TransactionUseCase) notificationAfterTransfer(c context.Context, sofWal
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		t.Log.WithError(err).Error("Failed to commit transaction")
+		t.Log.WithError(err).Error("Failed to commit notification transaction")
 		tx.Rollback()
 		return
 	}
