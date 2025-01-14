@@ -1,0 +1,7 @@
+logs
+.vercel
+.git
+vercel.json
+Makefile
+docs
+.env

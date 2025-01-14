@@ -1,0 +1,19 @@
+FROM golang:1.23-alpine AS builder
+WORKDIR /domped
+RUN apk add --no-cache gcc musl-dev
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o main ./main.go
+
+FROM alpine:3.18
+LABEL maintainer="Riz-it <mrizalf.email@gmail.com>" \
+      description="API Gateway built with Go" \
+      version="1.0.0"
+
+WORKDIR /app
+COPY --from=builder /domped/main .
+RUN apk add --no-cache dumb-init ca-certificates \
+    && chmod +x /app/main
+EXPOSE 9009
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "/app/main"]

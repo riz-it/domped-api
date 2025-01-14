@@ -58,6 +58,10 @@ var topUpSet = wire.NewSet(
 	controller.NewTopUpController,
 )
 
+var mainSet = wire.NewSet(
+	controller.NewMainController,
+)
+
 var middlewareSet = wire.NewSet(
 	middleware.NewAuthMiddleware,
 )
@@ -82,6 +86,7 @@ func InitializedApp() *config.App {
 		transactionSet,
 		pinRecoverySet,
 		topUpSet,
+		mainSet,
 		middlewareSet,
 	)
 	return nil

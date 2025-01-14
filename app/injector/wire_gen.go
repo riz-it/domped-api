@@ -47,7 +47,8 @@ func InitializedApp() *config.App {
 	topUpRepository := repository.NewTopUp(logger)
 	topUpUseCase := usecase.NewTopUpUseCase(db, logger, notificationRepository, midtrans, topUpRepository, walletRepository, transactionRepository, validate)
 	topUpController := controller.NewTopUpController(topUpUseCase, logger, midtrans)
-	routerConfig := delivery.NewRouter(app, v, authController, transactionController, pinRecoveryController, notificationController, topUpController)
+	mainController := controller.NewMainController(logger)
+	routerConfig := delivery.NewRouter(app, v, authController, transactionController, pinRecoveryController, notificationController, topUpController, mainController)
 	configApp := config.NewApp(routerConfig, configConfig)
 	return configApp
 }
@@ -67,5 +68,7 @@ var notificationSet = wire.NewSet(repository.NewNotification, wire.Bind(new(doma
 var transactionSet = wire.NewSet(repository.NewTransaction, wire.Bind(new(domain.TransactionRepository), new(*repository.TransactionRepository)), usecase.NewTransactionUseCase, controller.NewTransactionController)
 
 var topUpSet = wire.NewSet(repository.NewTopUp, wire.Bind(new(domain.TopUpRepository), new(*repository.TopUpRepository)), usecase.NewTopUpUseCase, controller.NewTopUpController)
+
+var mainSet = wire.NewSet(controller.NewMainController)
 
 var middlewareSet = wire.NewSet(middleware.NewAuthMiddleware)
