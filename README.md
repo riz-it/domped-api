@@ -1,20 +1,20 @@
-# API Domped Digital
+# Domped Digital API
 
 [API Domped Digital](https://domped-api.vercel.app/)
 
 ## Development
 
-1. **Clone atau Pull Repository**
+1. **Clone or Pull the Repository**
 
    ```bash
    git clone git@github.com:riz-it/domped-api.git
    ```
 
-2. **Konfigurasi Environment Variables**
+2. **Configure Environment Variables**
 
-   - Salin file `env.example` ke `.env`, kemudian sesuaikan konfigurasi.
+   - Copy the `env.example` file to `.env`, then adjust the configurations as needed.
 
-3. **Build Docker Image** _(opsional jika belum pernah membangun image, sesuaikan dengan OS yang digunakan)_
+3. **Build Docker Image** _(optional if you have not built the image before, adjust according to your OS)_
 
    - **Linux/Mac**:
      ```bash
@@ -25,29 +25,29 @@
      docker build -t github.com/riz-it/domped-api.git .
      ```
 
-4. **Jalankan Container**
+4. **Run the Container**
 
    ```bash
    docker run --rm -it -v $(pwd):/app -w /app -p 9009:9009 domped-digital
    ```
 
-5. **Mulai Pengembangan**
+5. **Start Development**
 
-   - Setelah container berjalan, mulai pengembangan.
+   - Once the container is running, begin your development process.
 
 ## Deployment
 
-1. **Clone atau Pull Repository**
+1. **Clone or Pull the Repository**
 
    ```bash
    git clone git@github.com:riz-it/domped-api.git
    ```
 
-2. **Konfigurasi Environment Variables**
+2. **Configure Environment Variables**
 
-   - Salin file `env.example` ke `.env`, kemudian sesuaikan konfigurasi.
+   - Copy the `env.example` file to `.env`, then adjust the configurations as needed.
 
-3. **Build Docker Image** _(opsional jika belum pernah membangun image, sesuaikan dengan OS yang digunakan)_
+3. **Build Docker Image** _(optional if you have not built the image before, adjust according to your OS)_
 
    - **Linux/Mac**:
      ```bash
@@ -58,19 +58,19 @@
      docker build -t github.com/riz-it/domped-api.git .
      ```
 
-4. **Jalankan Container**
+4. **Run the Container**
 
    ```bash
    docker run --env-file .env --name domped-digital -d -p 9009:9009 github.com/riz-it/domped-api.git
    ```
 
-5. **API Domped Digital Siap Digunakan**
+5. **Domped Digital API is Ready to Use**
 
-   - Setelah container berjalan, mulai gunakan.
+   - Once the container is running, you can start using the API.
 
 ## Cleaning up Docker
 
-- **Hentikan dan Hapus Container pmb** _(sesuaikan dengan OS yang digunakan)_
+- **Stop and Remove the `domped-digital` Container** _(adjust according to your OS)_
 
   - **Linux/Mac**:
     ```bash
@@ -82,13 +82,13 @@
     docker rm domped-digital
     ```
 
-- **Hapus semua container**
+- **Remove All Containers**
 
   ```bash
   docker rm -vf $(docker ps -aq)
   ```
 
-- **Prune Docker system** _(menghapus semua volume, image, dan cache yang tidak digunakan)_
+- **Prune Docker System** _(removes all unused volumes, images, and cache)_
 
   ```bash
   docker system prune --volumes -af
